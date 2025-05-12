@@ -1,5 +1,5 @@
 
-import React, { ReactNode } from "react";
+import React, { ReactNode, useEffect } from "react";
 import { MsalProvider } from "@azure/msal-react";
 import { PublicClientApplication, EventType, EventMessage, AuthenticationResult } from "@azure/msal-browser";
 import { msalConfig } from "../authConfig";
@@ -20,7 +20,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { toast } = useToast();
 
   // Event callbacks
-  React.useEffect(() => {
+  useEffect(() => {
     // Event callback for login success
     const callbackLoginSuccess = (message: EventMessage) => {
       if (message.eventType === EventType.LOGIN_SUCCESS) {
@@ -57,16 +57,16 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
-    // Register event callbacks
-    msalInstance.addEventCallback(callbackLoginSuccess);
-    msalInstance.addEventCallback(callbackLogoutSuccess);
-    msalInstance.addEventCallback(callbackError);
+    // Register event callbacks and store their IDs
+    const loginSuccessCallbackId = msalInstance.addEventCallback(callbackLoginSuccess);
+    const logoutSuccessCallbackId = msalInstance.addEventCallback(callbackLogoutSuccess);
+    const errorCallbackId = msalInstance.addEventCallback(callbackError);
 
     return () => {
-      // Unregister event callbacks
-      msalInstance.removeEventCallback(callbackLoginSuccess);
-      msalInstance.removeEventCallback(callbackLogoutSuccess);
-      msalInstance.removeEventCallback(callbackError);
+      // Unregister event callbacks using their IDs
+      if (loginSuccessCallbackId) msalInstance.removeEventCallback(loginSuccessCallbackId);
+      if (logoutSuccessCallbackId) msalInstance.removeEventCallback(logoutSuccessCallbackId);
+      if (errorCallbackId) msalInstance.removeEventCallback(errorCallbackId);
     };
   }, [toast]);
 
